@@ -1,0 +1,33 @@
+# Terraform downloaded providers
+.terraform/
+
+# Terraform state and saved plans
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+
+# Local variable values
+*.tfvars
+*.tfvars.json
+
+# Python environment and generated files
+.venv/
+__pycache__/
+*.pyc
+lambda.zip
+
+# Local credentials and environment files
+.aws/
+.env
+.env.*
+
+# Temporary API test files
+task.json
+response.json
+*-task.json
+*-response.json
+# Earlier IAM authentication test
+test_api.py

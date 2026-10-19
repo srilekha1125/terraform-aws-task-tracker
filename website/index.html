@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Task Tracker | Srilekha</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./">Task Tracker</a>
+    <button id="sign-in-button" type="button" disabled>
+      Sign in
+    </button>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <p class="eyebrow">PLAN. DO. COMPLETE.</p>
+      <h1>A little structure.<br>A lot more progress.</h1>
+      <p>Keep your tasks organized and take them one step at a time.</p>
+    </section>
+
+    <section class="task-panel" aria-labelledby="tasks-heading">
+      <div class="panel-heading">
+        <h2 id="tasks-heading">Your tasks</h2>
+        <button id="refresh-button" type="button" disabled>
+          Refresh
+        </button>
+      </div>
+
+      <p id="connection-message" role="status">
+        Sign-in and API connection are being set up.
+      </p>
+
+      <form id="task-form">
+        <label for="task-title">What do you need to do?</label>
+        <div class="input-row">
+          <input
+            id="task-title"
+            name="title"
+            type="text"
+            placeholder="e.g. Finish my Terraform project"
+            maxlength="200"
+            required
+            disabled
+          >
+          <button id="add-button" type="submit" disabled>
+            Add task
+          </button>
+        </div>
+      </form>
+
+      <div class="filters" role="group" aria-label="Filter tasks">
+        <button type="button" data-filter="all" aria-pressed="true" disabled>
+          All
+        </button>
+        <button type="button" data-filter="Pending" aria-pressed="false" disabled>
+          Pending
+        </button>
+        <button type="button" data-filter="Completed" aria-pressed="false" disabled>
+          Completed
+        </button>
+      </div>
+
+      <p id="task-summary">Your tasks will appear here after you sign in.</p>
+      <ul id="task-list" aria-label="Tasks"></ul>
+    </section>
+  </main>
+
+  <footer>
+    Built by Srilekha · Task Tracker
+  </footer>
+</body>
+</html>
