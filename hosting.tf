@@ -48,6 +48,10 @@ resource "aws_cloudfront_distribution" "website" {
     allowed_methods = ["GET", "HEAD"]
     cached_methods  = ["GET", "HEAD"]
     compress        = true
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.page_router.arn
+    }
 
     min_ttl     = 0
     default_ttl = 300
@@ -105,4 +109,22 @@ resource "aws_s3_bucket_policy" "website" {
   depends_on = [
     aws_s3_bucket_public_access_block.website
   ]
+}
+resource "aws_cloudfront_function" "page_router" {
+  name    = "task-tracker-page-router"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+
+  code = <<-EOT
+    function handler(event) {
+      var request = event.request;
+      var lastPart = request.uri.split("/").pop();
+
+      if (lastPart.indexOf(".") === -1) {
+        request.uri = "/index.html";
+      }
+
+      return request;
+    }
+  EOT
 }
