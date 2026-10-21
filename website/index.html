@@ -4,25 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Task Tracker | Srilekha</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="./">Task Tracker</a>
+    <a class="brand" href="/">Task Tracker</a>
     <button id="sign-in-button" type="button" disabled>
       Sign in
     </button>
   </header>
 
   <main class="container">
-    <section class="intro">
+    <section id="home-page" class="intro">
       <p class="eyebrow">PLAN. DO. COMPLETE.</p>
       <h1>A little structure.<br>A lot more progress.</h1>
       <p>Keep your tasks organized and take them one step at a time.</p>
+      <a href="/tasks">View tasks</a>
     </section>
 
-    <section class="task-panel" aria-labelledby="tasks-heading">
+    <section id="tasks-page" class="task-panel" aria-labelledby="tasks-heading">
       <div class="panel-heading">
         <h2 id="tasks-heading">Your tasks</h2>
         <button id="refresh-button" type="button" disabled>
@@ -67,6 +68,30 @@
       <p id="task-summary">Your tasks will appear here after you sign in.</p>
       <ul id="task-list" aria-label="Tasks"></ul>
     </section>
+
+    <section id="task-details-page" hidden>
+  <h1>Task details</h1>
+  <p id="task-details-message" role="status"></p>
+
+  <dl>
+    <dt>Title</dt>
+    <dd id="detail-title"></dd>
+
+    <dt>Status</dt>
+    <dd id="detail-status"></dd>
+
+    <dt>Created</dt>
+    <dd id="detail-created"></dd>
+  </dl>
+
+  <a href="/tasks">Back to tasks</a>
+</section>
+    <section id="not-found-page" hidden>
+      <h1>Page not found</h1>
+      <p>The page you requested does not exist.</p>
+      <a href="/">Back to home</a>
+    </section>
+
   </main>
 
   <footer>

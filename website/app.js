@@ -5,6 +5,45 @@ const authConfig = {
 };
 
 const apiUrl = "https://rvmww4ezne.execute-api.us-east-2.amazonaws.com";
+const homePage = document.getElementById("home-page");
+const tasksPage = document.getElementById("tasks-page");
+const notFoundPage = document.getElementById("not-found-page");
+const taskDetailsPage = document.getElementById("task-details-page");
+
+function showPage() {
+  const path = window.location.pathname;
+  const isTaskDetails = /^\/tasks\/[^/]+$/.test(path);
+
+  homePage.hidden = path !== "/";
+  tasksPage.hidden = path !== "/tasks";
+  taskDetailsPage.hidden = !isTaskDetails;
+
+  notFoundPage.hidden =
+    path === "/" || path === "/tasks" || isTaskDetails;
+}
+document.querySelectorAll('a[href="/"], a[href="/tasks"]')
+  .forEach(link => {
+    link.addEventListener("click", event => {
+      if (
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      window.history.pushState({}, "", link.getAttribute("href"));
+      showPage();
+      if (window.location.pathname === "/tasks" && isSignedIn()) {
+        loadTasks();
+      }
+    });
+  });
+
+window.addEventListener("popstate", showPage);
 
 const signInButton = document.getElementById("sign-in-button");
 const connectionMessage = document.getElementById("connection-message");
@@ -71,6 +110,7 @@ function clearSession() {
 }
 
 async function startSignIn() {
+  sessionStorage.setItem("return_after_login", window.location.pathname);
   const verifier = randomString();
   const state = randomString();
 
@@ -163,7 +203,19 @@ async function finishSignIn() {
   } finally {
     sessionStorage.removeItem("pkce_verifier");
     sessionStorage.removeItem("login_state");
-    window.history.replaceState({}, document.title, "/");
+    const savedPath = sessionStorage.getItem("return_after_login");
+const allowedPath =
+  savedPath === "/tasks" ||
+  /^\/tasks\/[^/]+$/.test(savedPath || "");
+
+const returnPath = isSignedIn() && allowedPath
+  ? savedPath
+  : "/";
+
+sessionStorage.removeItem("return_after_login");
+
+window.history.replaceState({}, document.title, returnPath);
+showPage();
   }
 }
 
@@ -234,7 +286,8 @@ function renderTasks(tasks) {
 
     const details = document.createElement("div");
 
-    const title = document.createElement("p");
+    const title = document.createElement("a");
+    title.href = `/tasks/${encodeURIComponent(task.task_id)}`;
     title.className = "task-title";
     title.textContent = task.title;
 
@@ -283,7 +336,40 @@ function renderTasks(tasks) {
       `${label}: ${visibleTasks.length} of ${allTasks.length} tasks`;
   }
 }
+async function loadTaskDetails(taskId) {
+  const message = document.getElementById("task-details-message");
+  const title = document.getElementById("detail-title");
+  const status = document.getElementById("detail-status");
+  const created = document.getElementById("detail-created");
 
+  title.textContent = "";
+  status.textContent = "";
+  created.textContent = "";
+
+  if (!isSignedIn()) {
+    message.textContent = "Sign in to view this task.";
+    return;
+  }
+
+  message.textContent = "Loading task details.";
+
+  try {
+    const task = await apiRequest(
+      `/tasks/${encodeURIComponent(taskId)}`
+    );
+
+    if (window.location.pathname !== `/tasks/${encodeURIComponent(taskId)}`) {
+      return;
+    }
+
+    title.textContent = task.title;
+    status.textContent = task.status;
+    created.textContent = new Date(task.created_at).toLocaleString();
+    message.textContent = "";
+  } catch (error) {
+    message.textContent = error.message;
+  }
+}
 async function fetchAndRenderTasks() {
   const result = await apiRequest("/tasks");
 
@@ -416,6 +502,8 @@ signInButton.addEventListener("click", async () => {
 });
 
 async function initialize() {
+  showPage();
+
   busy = true;
   updateControls();
 
@@ -424,7 +512,13 @@ async function initialize() {
 
     if (isSignedIn()) {
       connectionMessage.textContent = "Loading your tasks…";
-      await fetchAndRenderTasks();
+      const match = window.location.pathname.match(/^\/tasks\/([^/]+)$/);
+
+      if (match) {
+        await loadTaskDetails(decodeURIComponent(match[1]));
+      } else {
+        await fetchAndRenderTasks();
+      }
       connectionMessage.textContent = "Connected. Your tasks are up to date.";
     } else {
       clearSession();

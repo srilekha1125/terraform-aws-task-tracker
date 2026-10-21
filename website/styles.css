@@ -182,9 +182,10 @@ input {
 }
 
 .task-title {
+  display: block;
   margin: 0 0 6px;
   overflow-wrap: anywhere;
-  font-weight: 600;
+  font-weight: 600; 
 }
 
 .task-status {
@@ -227,4 +228,7 @@ footer {
   .task-actions button {
     flex: 1;
   }
+}
+[hidden] {
+  display: none !important;
 }
