@@ -37,13 +37,42 @@ document.querySelectorAll('a[href="/"], a[href="/tasks"]')
       event.preventDefault();
       window.history.pushState({}, "", link.getAttribute("href"));
       showPage();
-      if (window.location.pathname === "/tasks" && isSignedIn()) {
-        loadTasks();
-      }
+
+if (!isSignedIn()) {
+  clearSession();
+  return;
+}
+
+if (window.location.pathname === "/tasks") {
+  loadTasks();
+}
     });
   });
 
-window.addEventListener("popstate", showPage);
+window.addEventListener("popstate", () => {
+  showPage();
+
+  if (!isSignedIn()) {
+  clearSession();
+  return;
+}
+
+  const path = window.location.pathname;
+  const match = path.match(/^\/tasks\/([^/]+)$/);
+
+  if (path === "/tasks") {
+    loadTasks();
+  } else if (match) {
+    loadTaskDetails(decodeURIComponent(match[1]));
+  }
+});
+window.addEventListener("pageshow", event => {
+  if (event.persisted && !isSignedIn()) {
+    busy = false;
+    clearSession();
+    showPage();
+  }
+});
 
 const signInButton = document.getElementById("sign-in-button");
 const connectionMessage = document.getElementById("connection-message");
@@ -105,7 +134,16 @@ function clearSession() {
   sessionStorage.removeItem("token_expires_at");
 
   taskList.replaceChildren();
+  taskTitle.value = "";
   taskSummary.textContent = "Sign in to view your tasks.";
+  connectionMessage.textContent = "Sign in to access your tasks.";
+
+  document.getElementById("detail-title").textContent = "";
+  document.getElementById("detail-status").textContent = "";
+  document.getElementById("detail-created").textContent = "";
+  document.getElementById("task-details-message").textContent =
+    "Sign in to view this task.";
+
   updateControls();
 }
 
@@ -225,8 +263,10 @@ async function apiRequest(path, method = "GET", body) {
     throw new Error("Your session expired. Please sign in again.");
   }
 
+  const requestToken = sessionStorage.getItem("access_token");
+
   const headers = {
-    Authorization: `Bearer ${sessionStorage.getItem("access_token")}`
+    Authorization: `Bearer ${requestToken}`
   };
 
   const options = {
@@ -267,7 +307,14 @@ async function apiRequest(path, method = "GET", body) {
       result.message || `Request failed (${response.status}).`
     );
   }
+if (!isSignedIn()) {
+  clearSession();
+  throw new Error("Your session expired. Please sign in again.");
+}
 
+if (sessionStorage.getItem("access_token") !== requestToken) {
+  throw new Error("Your session changed. Please reload this page.");
+}
   return result;
 }
 
@@ -574,4 +621,13 @@ async function deleteTask(task) {
     updateControls();
   }
 }
+function checkSessionExpiry() {
+  const hasToken = Boolean(sessionStorage.getItem("access_token"));
+
+  if (hasToken && !isSignedIn()) {
+    clearSession();
+  }
+}
+
+setInterval(checkSessionExpiry, 1000);
 initialize();
